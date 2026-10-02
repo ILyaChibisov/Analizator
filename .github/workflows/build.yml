@@ -2,7 +2,7 @@ name: Build Linux AppImage
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch: # Позволяет запускать сборку вручную из вкладки Actions
 
 jobs:
