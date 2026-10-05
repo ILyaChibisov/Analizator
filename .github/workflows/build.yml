@@ -3,11 +3,10 @@ name: Build Linux AppImage
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: # Позволяет запускать сборку вручную из вкладки Actions
+  workflow_dispatch:
 
 jobs:
   build-appimage:
-    # Используем ubuntu-22.04 (ubuntu-20.04 удалён из GitHub Runners в 2025)
     runs-on: ubuntu-22.04
 
     steps:
@@ -23,11 +22,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install PyQt5 pandas numpy matplotlib pyinstaller
-          # Если у тебя есть requirements.txt — раскомментируй:
-          # pip install -r requirements.txt
 
       - name: Build with PyInstaller
-        # --onedir надёжнее для GUI, чем --onefile
         run: |
           pyinstaller --onedir --windowed --name Analizator main.py
 
@@ -53,8 +49,18 @@ jobs:
           Categories=Utility;
           EOF
 
-          # ВАЖНО: копируем .desktop в корень AppDir (требование appimagetool)
+          # Копируем .desktop в корень AppDir
           cp AppDir/usr/share/applications/analizator.desktop AppDir/
+
+          # Генерируем иконку-заглушку (256x256, зелёный фон, буква A)
+          # ImageMagick предустановлен на ubuntu-22.04
+          convert -size 256x256 xc:'#10B981' \
+            -gravity center -pointsize 120 -fill white \
+            -annotate 0 "A" \
+            AppDir/analizator.png
+
+          # Копируем иконку в нужные места
+          cp AppDir/analizator.png AppDir/usr/share/icons/hicolor/256x256/apps/analizator.png
 
           # Создаём скрипт AppRun
           cat > AppDir/AppRun << 'EOF'
