@@ -2,12 +2,12 @@ name: Build Linux AppImage
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
   workflow_dispatch: # Позволяет запускать сборку вручную из вкладки Actions
 
 jobs:
   build-appimage:
-    # ВАЖНО: используем старую Ubuntu для совместимости glibc
+    # Используем ubuntu-22.04 (ubuntu-20.04 удалён из GitHub Runners в 2025)
     runs-on: ubuntu-22.04
 
     steps:
@@ -19,10 +19,12 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install PyQt5 pandas numpy matplotlib pyinstaller
+          # Если у тебя есть requirements.txt — раскомментируй:
+          # pip install -r requirements.txt
 
       - name: Build with PyInstaller
         # --onedir надёжнее для GUI, чем --onefile
@@ -51,6 +53,9 @@ jobs:
           Categories=Utility;
           EOF
 
+          # ВАЖНО: копируем .desktop в корень AppDir (требование appimagetool)
+          cp AppDir/usr/share/applications/analizator.desktop AppDir/
+
           # Создаём скрипт AppRun
           cat > AppDir/AppRun << 'EOF'
           #!/bin/bash
@@ -63,7 +68,7 @@ jobs:
 
       - name: Download appimagetool
         run: |
-          wget https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
 
       - name: Build AppImage
